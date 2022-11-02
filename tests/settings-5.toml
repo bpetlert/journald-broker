@@ -1,0 +1,7 @@
+[global]
+filters = ["_TRANSPORT=kernel", "PRIORITY=4"]
+
+[events.xhci_hcd-error]
+message = 'xhci_hcd 0000:04:00\.0: WARN waiting for error on ep to be cleared'
+next-watch-delay = "1 minute"
+script = "/usr/local/bin/xhci_hcd-rebind.sh"

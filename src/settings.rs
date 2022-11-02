@@ -112,34 +112,36 @@ mod tests {
         );
         assert_eq!(settings.events["event-4"].script, "script-4");
         assert!(!settings.events["event-4"].script_wait.unwrap());
-    }
 
-    #[test]
-    fn load_example_settings() {
-        let settings =
-            Settings::new(concat!(env!("CARGO_MANIFEST_DIR"), "/journald-broker.toml")).unwrap();
+        // settings-5
+        let settings = Settings::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/settings-5.toml"
+        ))
+        .unwrap();
         assert_eq!(
             settings.global.as_ref().unwrap().filters.as_ref().unwrap(),
             &vec!["_TRANSPORT=kernel", "PRIORITY=4"]
         );
-
         assert_eq!(settings.global.as_ref().unwrap().script_timeout, Some(20));
-
         assert_eq!(
             settings.events["xhci_hcd-error"].message,
             "xhci_hcd 0000:04:00\\.0: WARN waiting for error on ep to be cleared"
         );
-
         assert_eq!(
             settings.events["xhci_hcd-error"].next_watch_delay.unwrap(),
-            Duration::from_secs(300)
+            Duration::from_secs(60)
         );
-
         assert_eq!(
             settings.events["xhci_hcd-error"].script,
             "/usr/local/bin/xhci_hcd-rebind.sh"
         );
-
         assert!(settings.events["xhci_hcd-error"].script_wait.unwrap());
+    }
+
+    #[test]
+    fn load_settings_example() {
+        let result = Settings::new(concat!(env!("CARGO_MANIFEST_DIR"), "/journald-broker.toml"));
+        assert!(matches!(result, Err(ConfigError::Message(v)) if v == "missing field `events`"));
     }
 }

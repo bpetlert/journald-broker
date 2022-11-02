@@ -1,0 +1,4 @@
+[events.event-2]
+message = 'regex-2'
+next-watch-delay = "60s"
+script = "script-2"

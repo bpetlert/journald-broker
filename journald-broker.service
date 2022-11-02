@@ -1,0 +1,14 @@
+[Unit]
+Description=Journal log monitor
+Requires=systemd-journald.socket
+After=systemd-journald.socket
+
+[Service]
+Type=notify
+User=root
+Restart=on-failure
+RestartSec=30s
+ExecStart=/usr/bin/journald-broker
+
+[Install]
+WantedBy=multi-user.target

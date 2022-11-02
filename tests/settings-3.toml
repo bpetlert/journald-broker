@@ -1,0 +1,4 @@
+[events.event-3]
+message = 'regex-3'
+script = "script-3"
+script-wait = true

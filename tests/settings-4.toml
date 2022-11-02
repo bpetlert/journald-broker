@@ -1,0 +1,8 @@
+[global]
+script_timeout = "10"
+
+[events.event-4]
+message = 'regex-4'
+next-watch-delay = "60s"
+script = "script-4"
+script-wait = false

@@ -49,6 +49,7 @@ impl Script {
         };
 
         if let Some(timeout) = self.timeout {
+            // Wait until child process to finish or timeout
             match process.wait_timeout(Duration::from_secs(timeout))? {
                 Some(exit_code) => {
                     info!("Finished {}, {exit_code}", &self.path.display());
@@ -64,6 +65,7 @@ impl Script {
                 }
             }
         } else {
+            // Not wait for child process to finish, use thread to wait for child process' return code.
             thread::spawn(move || match process.wait() {
                 Ok(exit_code) => info!("Finished {}, {exit_code}", &self.path.display()),
                 Err(err) => warn!("{err}"),

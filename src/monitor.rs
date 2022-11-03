@@ -86,41 +86,45 @@ impl Monitor {
         }
         info!("{notify_msg}");
         loop {
-            if let Some(entry) = journal.await_next_entry(None)? {
-                if let Some(log_msg) = entry.get("MESSAGE") {
-                    for idx in self.matches(log_msg)? {
-                        // Still in next watch delay?
-                        if self.events[idx].next_watch_delay.is_some()
-                            && self.events[idx].last_found.is_some()
-                            && self.events[idx].last_found.unwrap().elapsed()
-                                <= self.events[idx].next_watch_delay.unwrap()
-                        {
-                            continue;
-                        }
+            let Some(entry) = journal.await_next_entry(None)? else {
+                continue;
+            };
 
-                        // Record last found
-                        if self.events[idx].next_watch_delay.is_some() {
-                            self.events[idx].last_found = Some(Instant::now());
-                        }
+            let Some(log_msg) = entry.get("MESSAGE") else {
+                continue;
+            };
 
-                        info!(
-                            "Found event: {name}, log message: {log_msg}. Try to execute {script}",
-                            name = self.events[idx].name,
-                            script = self.events[idx].script.display()
-                        );
+            for idx in self.matches(log_msg)? {
+                // Still in next watch delay?
+                if self.events[idx].next_watch_delay.is_some()
+                    && self.events[idx].last_found.is_some()
+                    && self.events[idx].last_found.unwrap().elapsed()
+                        <= self.events[idx].next_watch_delay.unwrap()
+                {
+                    continue;
+                }
 
-                        // Put script in queue.
-                        let mut script: Script = Script::new(
-                            self.events[idx].script.clone(),
-                            self.events[idx].script_timeout,
-                        );
-                        script.add_env(EnvVar::Message, log_msg)?;
-                        script.add_env(EnvVar::Json, &serde_json::to_string(&entry)?)?;
+                // Record last found
+                if self.events[idx].next_watch_delay.is_some() {
+                    self.events[idx].last_found = Some(Instant::now());
+                }
 
-                        if let Err(err) = launcher.add(script) {
-                            warn!("{err}");
-                        }
-                    }
+                info!(
+                    "Found event: {name}, log message: {log_msg}. Try to execute {script}",
+                    name = self.events[idx].name,
+                    script = self.events[idx].script.display()
+                );
+
+                // Put script in queue.
+                let mut script: Script = Script::new(
+                    self.events[idx].script.clone(),
+                    self.events[idx].script_timeout,
+                );
+                script.add_env(EnvVar::Message, log_msg)?;
+                script.add_env(EnvVar::Json, &serde_json::to_string(&entry)?)?;
+
+                if let Err(err) = launcher.add(script) {
+                    warn!("{err}");
                 }
             }
         }

@@ -1,23 +1,36 @@
 use anyhow::{bail, Result};
 use std::{
     collections::HashMap,
+    fmt,
     path::PathBuf,
     process::Command,
     sync::mpsc::{channel, RecvError, Sender},
     thread,
     time::Duration,
 };
-use strum::{Display, EnumString};
 use tracing::{info, warn};
 use wait_timeout::ChildExt;
 
-#[derive(Debug, EnumString, Display)]
+#[derive(Debug)]
 pub enum EnvVar {
-    #[strum(serialize = "JNB_MESSAGE")]
-    Message,
+    Message(String),
+    Json(String),
 
-    #[strum(serialize = "JNB_JSON")]
-    Json,
+    #[allow(dead_code)]
+    Custom {
+        key: String,
+        value: String,
+    },
+}
+
+impl fmt::Display for EnvVar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            EnvVar::Message(_) => write!(f, "JNB_MESSAGE"),
+            EnvVar::Json(_) => write!(f, "JNB_JSON"),
+            EnvVar::Custom { key, value: _ } => write!(f, "JNB_{key}"),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -36,8 +49,14 @@ impl Script {
         }
     }
 
-    pub fn add_env(&mut self, name: EnvVar, val: &str) -> Result<()> {
-        self.envs.insert(name.to_string(), val.to_string());
+    pub fn add_env(&mut self, env_var: EnvVar) -> Result<()> {
+        let value = match &env_var {
+            EnvVar::Message(value) | EnvVar::Json(value) | EnvVar::Custom { key: _, value } => {
+                value
+            }
+        };
+
+        self.envs.insert(env_var.to_string(), value.to_string());
         Ok(())
     }
 

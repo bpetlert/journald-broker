@@ -154,8 +154,8 @@ impl Monitor {
             self.events[event_index].script.clone(),
             self.events[event_index].script_timeout,
         );
-        script.add_env(EnvVar::Message, log_msg)?;
-        script.add_env(EnvVar::Json, &serde_json::to_string(&entry)?)?;
+        script.add_env(EnvVar::Message(log_msg.to_owned()))?;
+        script.add_env(EnvVar::Json(serde_json::to_string(&entry)?))?;
 
         if let Err(err) = self.launcher.add(script) {
             warn!("{err}");

@@ -4,6 +4,7 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use std::{
+    collections::BTreeMap,
     path::PathBuf,
     time::{Duration, Instant},
 };
@@ -13,13 +14,14 @@ use tracing::{debug, info, warn};
 pub struct Monitor {
     filters: Option<Vec<String>>,
     events: Vec<Event>,
+    launcher: Launcher,
 }
 
 struct Event {
     pub name: String,
     pub msg_filter: String,
-    pub next_watch_delay: Option<Duration>,
-    pub last_found: Option<Instant>,
+    next_watch_delay: Option<Duration>,
+    last_found: Option<Instant>,
     pub script: PathBuf,
     pub script_timeout: Option<u64>,
 }
@@ -41,6 +43,7 @@ impl Monitor {
         Ok(Self {
             filters: settings.global.and_then(|v| v.filters),
             events,
+            launcher: Launcher::new(),
         })
     }
 
@@ -77,57 +80,88 @@ impl Monitor {
             bail!("Cannot notify systemd, READY=1");
         }
 
-        debug!("Start script launcher");
-        let launcher = Launcher::new();
-
         let notify_msg = "Start monitor journal message...";
         if !daemon::notify(false, vec![("STATUS", &notify_msg)].iter())? {
             bail!("Cannot notify systemd, STATUS={notify_msg}");
         }
+
         info!("{notify_msg}");
         loop {
-            let Some(entry) = journal.await_next_entry(None)? else {
-                continue;
-            };
-
-            let Some(log_msg) = entry.get("MESSAGE") else {
-                continue;
-            };
-
-            for idx in self.matches(log_msg)? {
-                // Still in next watch delay?
-                if self.events[idx].next_watch_delay.is_some()
-                    && self.events[idx].last_found.is_some()
-                    && self.events[idx].last_found.unwrap().elapsed()
-                        <= self.events[idx].next_watch_delay.unwrap()
-                {
+            // Wait for 1st entry
+            match journal.await_next_entry(None) {
+                Ok(entry) => match entry {
+                    Some(entry) => {
+                        if let Some(log_msg) = entry.get("MESSAGE") {
+                            for event_index in self.matches(log_msg)? {
+                                self.respond(event_index, log_msg, &entry)?;
+                            }
+                        }
+                    }
+                    None => continue,
+                },
+                Err(err) => {
+                    warn!("{err}");
                     continue;
                 }
+            }
 
-                // Record last found
-                if self.events[idx].next_watch_delay.is_some() {
-                    self.events[idx].last_found = Some(Instant::now());
-                }
-
-                info!(
-                    "Found event: {name}, log message: {log_msg}. Try to execute {script}",
-                    name = self.events[idx].name,
-                    script = self.events[idx].script.display()
-                );
-
-                // Put script in queue.
-                let mut script: Script = Script::new(
-                    self.events[idx].script.clone(),
-                    self.events[idx].script_timeout,
-                );
-                script.add_env(EnvVar::Message, log_msg)?;
-                script.add_env(EnvVar::Json, &serde_json::to_string(&entry)?)?;
-
-                if let Err(err) = launcher.add(script) {
-                    warn!("{err}");
-                }
+            // Check the remaining entries
+            loop {
+                match journal.next_entry() {
+                    Ok(entry) => match entry {
+                        Some(entry) => {
+                            if let Some(log_msg) = entry.get("MESSAGE") {
+                                for event_index in self.matches(log_msg)? {
+                                    self.respond(event_index, log_msg, &entry)?;
+                                }
+                            }
+                        }
+                        None => break,
+                    },
+                    Err(err) => {
+                        warn!("{err}");
+                        break;
+                    }
+                };
             }
         }
+    }
+
+    fn respond(
+        &mut self,
+        event_index: usize,
+        log_msg: &str,
+        entry: &BTreeMap<String, String>,
+    ) -> Result<()> {
+        if self.events[event_index].in_watch_delay() {
+            debug!(
+                "Skip {}, it is still in next watch delay.",
+                self.events[event_index].name
+            );
+            return Ok(());
+        }
+
+        self.events[event_index].record_last_found();
+
+        info!(
+            "Found event: {name}, log message: {log_msg}. Try to execute {script}",
+            name = self.events[event_index].name,
+            script = self.events[event_index].script.display()
+        );
+
+        // Put script in queue.
+        let mut script: Script = Script::new(
+            self.events[event_index].script.clone(),
+            self.events[event_index].script_timeout,
+        );
+        script.add_env(EnvVar::Message, log_msg)?;
+        script.add_env(EnvVar::Json, &serde_json::to_string(&entry)?)?;
+
+        if let Err(err) = self.launcher.add(script) {
+            warn!("{err}");
+        }
+
+        Ok(())
     }
 
     fn matches(&self, log_msg: &str) -> Result<Vec<usize>> {
@@ -150,5 +184,26 @@ impl Monitor {
             .matches(log_msg)
             .into_iter()
             .collect::<Vec<usize>>())
+    }
+}
+
+impl Event {
+    /// Still in next watch delay?
+    pub fn in_watch_delay(&self) -> bool {
+        if self.next_watch_delay.is_some()
+            && self.last_found.is_some()
+            && self.last_found.unwrap().elapsed() <= self.next_watch_delay.unwrap()
+        {
+            return true;
+        }
+
+        false
+    }
+
+    /// Record last found
+    pub fn record_last_found(&mut self) {
+        if self.next_watch_delay.is_some() {
+            self.last_found = Some(Instant::now());
+        }
     }
 }

@@ -5,7 +5,7 @@ pkgrel=1
 pkgdesc="An event broker daemon for journald"
 arch=('x86_64')
 url="https://github.com/bpetlert/journald-broker"
-license=('MIT')
+license=('GPL-3.0-or-later')
 depends=('systemd')
 makedepends=(cargo)
 options=(!lto)
@@ -48,5 +48,5 @@ package() {
   install -Dm644 "${startdir}/journald-broker.toml" "$pkgdir/etc/systemd/journald-broker.toml"
 
   install -Dm644 "${startdir}/README.adoc" "$pkgdir/usr/share/doc/${pkgname}/README.adoc"
-  install -Dm644 "${startdir}/LICENSE" "$pkgdir/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${startdir}/COPYING" "$pkgdir/usr/share/licenses/${pkgname}/COPYING"
 }

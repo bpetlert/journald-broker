@@ -7,7 +7,7 @@ authors = ["Bhanupong Petchlert <bpetlert@gmail.com>"]
 description = "An event broker daemon for journald"
 documentation = "https://github.com/bpetlert/journald-broker"
 homepage = "https://github.com/bpetlert/journald-broker"
-license = "MIT"
+license = "GPL-3.0-or-later"
 readme = "README.adoc"
 repository = "https://github.com/bpetlert/journald-broker"
 

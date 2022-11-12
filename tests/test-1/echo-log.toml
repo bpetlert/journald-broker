@@ -1,0 +1,3 @@
+[events.echo-log]
+message = '.*'
+script = "./echo-log.sh"

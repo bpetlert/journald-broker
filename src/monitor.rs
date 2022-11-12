@@ -129,7 +129,7 @@ impl Monitor {
         self.events[event_index].record_last_found();
 
         info!(
-            "Found event: {name}, log message: {log_msg}. Try to execute {script}",
+            "Found EVENT: {name}, LOG_MESSAGE: {log_msg} => Try to execute {script}",
             name = self.events[event_index].name,
             script = self.events[event_index].script.display()
         );

@@ -90,42 +90,24 @@ impl Monitor {
         }
 
         loop {
-            // Wait for 1st entry
-            match journal.await_next_entry(None) {
-                Ok(entry) => match entry {
-                    Some(entry) => {
-                        if let Some(log_msg) = entry.get("MESSAGE") {
-                            for event_index in self.matches(log_msg)? {
-                                self.respond(event_index, log_msg, &entry)?;
-                            }
-                        }
+            // Wait for new journal entry
+            let candidate = journal.next_entry()?;
+            let entry = match candidate {
+                Some(new_entry) => new_entry,
+                None => loop {
+                    if let Some(new_entry) = journal.await_next_entry(None)? {
+                        break new_entry;
                     }
-                    None => continue,
                 },
-                Err(err) => {
-                    warn!("{err}");
-                    continue;
-                }
-            }
+            };
 
-            // Check the remaining entries
-            loop {
-                match journal.next_entry() {
-                    Ok(entry) => match entry {
-                        Some(entry) => {
-                            if let Some(log_msg) = entry.get("MESSAGE") {
-                                for event_index in self.matches(log_msg)? {
-                                    self.respond(event_index, log_msg, &entry)?;
-                                }
-                            }
-                        }
-                        None => break,
-                    },
-                    Err(err) => {
-                        warn!("{err}");
-                        break;
-                    }
-                };
+            let Some(log_msg) = entry.get("MESSAGE") else {
+                continue;
+            };
+            debug!("MESSAGE: {log_msg}");
+
+            for event_index in self.matches(log_msg)? {
+                self.respond(event_index, log_msg, &entry)?;
             }
         }
     }

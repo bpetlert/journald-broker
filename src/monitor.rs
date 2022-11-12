@@ -48,8 +48,8 @@ impl Monitor {
     }
 
     pub fn watch(&mut self) -> Result<()> {
+        // Open all kind (system + user) of log journal for reading.
         let mut journal: Journal = journal::OpenOptions::default()
-            .system(true)
             .local_only(true)
             .runtime_only(false)
             .all_namespaces(true)

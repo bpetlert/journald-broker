@@ -9,7 +9,7 @@ use std::{
     time::{Duration, Instant},
 };
 use systemd::{daemon, journal, Journal};
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 
 pub struct Monitor {
     filters: Option<Vec<String>>,
@@ -77,12 +77,12 @@ impl Monitor {
 
         debug!("Notify systemd that we are ready :)");
         if !daemon::notify(false, vec![("READY", "1")].iter())? {
-            bail!("Cannot notify systemd, READY=1");
+            error!("Cannot notify systemd, READY=1");
         }
 
         let notify_msg = "Start monitor journal message...";
         if !daemon::notify(false, vec![("STATUS", &notify_msg)].iter())? {
-            bail!("Cannot notify systemd, STATUS={notify_msg}");
+            error!("Cannot notify systemd, STATUS={notify_msg}");
         }
 
         info!("{notify_msg}");

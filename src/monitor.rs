@@ -91,8 +91,7 @@ impl Monitor {
 
         loop {
             // Wait for new journal entry
-            let candidate = journal.next_entry()?;
-            let entry = match candidate {
+            let entry = match journal.next_entry()? {
                 Some(new_entry) => new_entry,
                 None => loop {
                     if let Some(new_entry) = journal.await_next_entry(None)? {

@@ -71,10 +71,6 @@ impl Monitor {
             }
         }
 
-        // Go to end of journal
-        journal.seek_tail()?;
-        while journal.next_skip(1)? > 0 {}
-
         debug!("Notify systemd that we are ready :)");
         if !daemon::notify(false, vec![("READY", "1")].iter())? {
             error!("Cannot notify systemd, READY=1");
@@ -86,6 +82,13 @@ impl Monitor {
         }
 
         info!("{notify_msg}");
+
+        // Go to end of journal before start waiting for new entry
+        journal.seek_tail()?; // move to the position after the most recent available entry.
+        if journal.previous()? != 1 {
+            bail!("Cannot move to the most recent journal entry");
+        }
+
         loop {
             // Wait for 1st entry
             match journal.await_next_entry(None) {

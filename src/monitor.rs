@@ -174,14 +174,9 @@ impl Monitor {
 impl Event {
     /// Still in next watch delay?
     pub fn in_watch_delay(&self) -> bool {
-        if self.next_watch_delay.is_some()
+        self.next_watch_delay.is_some()
             && self.last_found.is_some()
             && self.last_found.unwrap().elapsed() <= self.next_watch_delay.unwrap()
-        {
-            return true;
-        }
-
-        false
     }
 
     /// Record last found

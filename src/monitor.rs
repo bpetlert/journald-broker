@@ -179,7 +179,6 @@ impl Event {
             && self.last_found.unwrap().elapsed() <= self.next_watch_delay.unwrap()
     }
 
-    /// Record last found
     pub fn record_last_found(&mut self) {
         if self.next_watch_delay.is_some() {
             self.last_found = Some(Instant::now());

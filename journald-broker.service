@@ -1,5 +1,5 @@
 [Unit]
-Description=Journal log monitor
+Description=Log-based event broker daemon for journald
 Requires=systemd-journald.socket
 After=systemd-journald.socket
 

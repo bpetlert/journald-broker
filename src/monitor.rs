@@ -1,15 +1,17 @@
-use crate::{
-    script::{EnvVar, Launcher, Script},
-    settings::Settings,
-};
-use anyhow::{bail, Result};
 use std::{
     collections::BTreeMap,
     path::PathBuf,
     time::{Duration, Instant},
 };
+
+use anyhow::{bail, Result};
 use systemd::{daemon, journal, Journal};
 use tracing::{debug, error, info, warn};
+
+use crate::{
+    script::{EnvVar, Launcher, Script},
+    settings::Settings,
+};
 
 pub struct Monitor {
     filters: Option<Vec<String>>,

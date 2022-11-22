@@ -1,7 +1,8 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use config::{Config, ConfigError, FileFormat, Map};
 use serde::Deserialize;
-use std::time::Duration;
 use tracing::debug;
 
 const fn default_true() -> Option<bool> {

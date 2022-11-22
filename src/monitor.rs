@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use systemd::{daemon, journal, Journal};
 use tracing::{debug, error, info, warn};
 
@@ -13,12 +13,6 @@ use crate::{
     settings::Settings,
 };
 
-pub struct Monitor {
-    filters: Option<Vec<String>>,
-    events: Vec<Event>,
-    launcher: Launcher,
-}
-
 struct Event {
     pub name: String,
     pub msg_filter: String,
@@ -26,6 +20,27 @@ struct Event {
     last_found: Option<Instant>,
     pub script: PathBuf,
     pub script_timeout: Option<u64>,
+}
+
+impl Event {
+    /// Still in next watch delay?
+    pub fn in_watch_delay(&self) -> bool {
+        self.next_watch_delay.is_some()
+            && self.last_found.is_some()
+            && self.last_found.unwrap().elapsed() <= self.next_watch_delay.unwrap()
+    }
+
+    pub fn record_last_found(&mut self) {
+        if self.next_watch_delay.is_some() {
+            self.last_found = Some(Instant::now());
+        }
+    }
+}
+
+pub struct Monitor {
+    filters: Option<Vec<String>>,
+    events: Vec<Event>,
+    launcher: Launcher,
 }
 
 impl Monitor {
@@ -50,12 +65,13 @@ impl Monitor {
     }
 
     pub fn watch(&mut self) -> Result<()> {
-        // Open all kind (system + user) of log journal for reading.
+        // Open all kind (system + kernel + user) of log journal for reading.
         let mut journal: Journal = journal::OpenOptions::default()
             .local_only(true)
             .runtime_only(false)
             .all_namespaces(true)
-            .open()?;
+            .open()
+            .context("Failed to open the log journal (system + kernel + user) for reading")?;
 
         // Add filters
         if let Some(filters) = &self.filters {
@@ -69,34 +85,52 @@ impl Monitor {
                     }
                     (field[0], field[1])
                 };
-                journal.match_add(key, val)?;
+                journal
+                    .match_add(key, val)
+                    .with_context(|| format!("Could not add journal filter `{key}={val}`"))?;
             }
         }
 
         debug!("Notify systemd that we are ready :)");
-        if !daemon::notify(false, vec![("READY", "1")].iter())? {
+        if !daemon::notify(false, vec![("READY", "1")].iter())
+            .context("Could not notify systemd, READY=1")?
+        {
             error!("Cannot notify systemd, READY=1");
         }
 
         let notify_msg = "Start monitor journal message...";
-        if !daemon::notify(false, vec![("STATUS", &notify_msg)].iter())? {
+        if !daemon::notify(false, vec![("STATUS", &notify_msg)].iter())
+            .context("Could notify systemd, STATUS={notify_msg}")?
+        {
             error!("Cannot notify systemd, STATUS={notify_msg}");
         }
 
         info!("{notify_msg}");
 
         // Go to end of journal before start waiting for new entry
-        journal.seek_tail()?; // move to the position after the most recent available entry.
-        if journal.previous()? != 1 {
+        journal
+            .seek_tail()
+            .context("Failed to move to the position after the most recent available entry")?;
+        if journal
+            .previous()
+            .context("Could not move to previous journal entry")?
+            != 1
+        {
             bail!("Cannot move to the most recent journal entry");
         }
 
         loop {
             // Wait for new journal entry
-            let entry = match journal.next_entry()? {
+            let entry = match journal
+                .next_entry()
+                .context("Failed to read the next entry from the journal")?
+            {
                 Some(new_entry) => new_entry,
                 None => loop {
-                    if let Some(new_entry) = journal.await_next_entry(None)? {
+                    if let Some(new_entry) = journal
+                        .await_next_entry(None)
+                        .context("Failed to read the next entry from the journal")?
+                    {
                         break new_entry;
                     }
                 },
@@ -107,8 +141,14 @@ impl Monitor {
             };
             debug!("MESSAGE: {log_msg}");
 
-            for event_index in self.matches(log_msg)? {
-                self.respond(event_index, log_msg, &entry)?;
+            for event_index in self
+                .matches(log_msg)
+                .with_context(|| format!("Could not match log message `{log_msg}`"))?
+            {
+                self.respond(event_index, log_msg, &entry)
+                    .with_context(|| {
+                        format!("Failed to respond to `{}", self.events[event_index].name)
+                    })?;
             }
         }
     }
@@ -140,11 +180,26 @@ impl Monitor {
             self.events[event_index].script.clone(),
             self.events[event_index].script_timeout,
         );
-        script.add_env(EnvVar::Message(log_msg.to_owned()))?;
-        script.add_env(EnvVar::Json(serde_json::to_string(&entry)?))?;
 
-        if let Err(err) = self.launcher.add(script) {
-            warn!("{err}");
+        let msg_env = EnvVar::Message(log_msg.to_owned());
+        script
+            .add_env(msg_env.clone())
+            .with_context(|| format!("Could not add env `{msg_env}`"))?;
+
+        let json_env = EnvVar::Json(
+            serde_json::to_string(&entry)
+                .with_context(|| format!("Failed to serialize `{entry:?}` to string of JSON"))?,
+        );
+        script
+            .add_env(json_env.clone())
+            .with_context(|| format!("Could not add env `{json_env}`"))?;
+
+        if let Err(err) = self
+            .launcher
+            .add(script.clone())
+            .with_context(|| format!("Failed to add script `{script:?}` to launcher"))
+        {
+            warn!("{err:#}");
         }
 
         Ok(())
@@ -170,20 +225,5 @@ impl Monitor {
             .matches(log_msg)
             .into_iter()
             .collect::<Vec<usize>>())
-    }
-}
-
-impl Event {
-    /// Still in next watch delay?
-    pub fn in_watch_delay(&self) -> bool {
-        self.next_watch_delay.is_some()
-            && self.last_found.is_some()
-            && self.last_found.unwrap().elapsed() <= self.next_watch_delay.unwrap()
-    }
-
-    pub fn record_last_found(&mut self) {
-        if self.next_watch_delay.is_some() {
-            self.last_found = Some(Instant::now());
-        }
     }
 }

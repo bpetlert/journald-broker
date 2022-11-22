@@ -11,7 +11,7 @@ run-debug +ARGS='':
 
 # Run test
 test +CASES='':
-  cargo test {{CASES}}
+  RUST_BACKTRACE=1 RUST_LOG=bpl_sys=debug cargo test -- {{CASES}}
 
 # Increase semver
 bump-version VERSION:

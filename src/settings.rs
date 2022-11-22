@@ -1,9 +1,8 @@
 use std::time::Duration;
 
-use anyhow::Result;
-use config::{Config, ConfigError, FileFormat, Map};
+use anyhow::{anyhow, Context, Result};
+use config::{Config, FileFormat, Map};
 use serde::Deserialize;
-use tracing::debug;
 
 const fn default_true() -> Option<bool> {
     Some(true)
@@ -44,13 +43,18 @@ pub struct Event {
 }
 
 impl Settings {
-    pub fn new(config_file: &str) -> Result<Self, ConfigError> {
+    pub fn new(config_file: &str) -> Result<Self> {
         let settings = Config::builder()
             .set_default("global.script_timeout", Some(20))?
             .add_source(config::File::new(config_file, FileFormat::Toml))
-            .build()?;
-        debug!("{settings:#?}");
-        settings.try_deserialize()
+            .build()
+            .map_err(|err| anyhow!("{err:#}"))
+            .context("Failed to construct configurations")?;
+
+        settings
+            .try_deserialize()
+            .map_err(|err| anyhow!("{err:#}"))
+            .context("Failed to deserialize the entire configuration")
     }
 }
 
@@ -142,7 +146,9 @@ mod tests {
 
     #[test]
     fn load_settings_example() {
-        let result = Settings::new(concat!(env!("CARGO_MANIFEST_DIR"), "/journald-broker.toml"));
-        assert!(matches!(result, Err(ConfigError::Message(v)) if v == "missing field `events`"));
+        let _ = dbg!(
+            Settings::new(concat!(env!("CARGO_MANIFEST_DIR"), "/journald-broker.toml"))
+                .unwrap_err()
+        );
     }
 }

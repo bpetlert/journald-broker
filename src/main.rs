@@ -4,7 +4,7 @@ mod settings;
 
 use std::{io, path::PathBuf};
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use mimalloc::MiMalloc;
 use tracing::debug;
@@ -26,22 +26,24 @@ pub struct Arguments {
 fn main() -> Result<()> {
     let filter =
         EnvFilter::try_from_default_env().unwrap_or(EnvFilter::try_new("journald_broker=info")?);
-    if let Err(err) = tracing_subscriber::fmt()
+    tracing_subscriber::fmt()
         .with_env_filter(filter)
         .without_time()
         .with_writer(io::stderr)
         .try_init()
-    {
-        bail!("Failed to initialize tracing subscriber: {err}");
-    }
+        .map_err(|err| anyhow!("{err:#}"))
+        .context("Failed to initialize tracing subscriber")?;
 
     let arguments = Arguments::parse();
     debug!("Run with {:?}", arguments);
 
-    let settings = Settings::new(arguments.config_file.to_str().unwrap())?;
+    let settings = Settings::new(arguments.config_file.to_str().unwrap())
+        .context("Failed to load settings")?;
     debug!("{settings:#?}");
 
-    Monitor::new(settings)?.watch()
+    Monitor::new(settings)
+        .context("Could not create journal watcher")?
+        .watch()
 }
 
 #[cfg(test)]

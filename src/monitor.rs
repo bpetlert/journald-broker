@@ -145,10 +145,11 @@ impl Monitor {
                 .matches(log_msg)
                 .with_context(|| format!("Could not match log message `{log_msg}`"))?
             {
-                self.respond(event_index, log_msg, &entry)
-                    .with_context(|| {
-                        format!("Failed to respond to `{}", self.events[event_index].name)
-                    })?;
+                if let Err(err) = self.respond(event_index, log_msg, &entry).with_context(|| {
+                    format!("Failed to respond to `{}", self.events[event_index].name)
+                }) {
+                    warn!("{err:#}");
+                }
             }
         }
     }
@@ -161,7 +162,7 @@ impl Monitor {
     ) -> Result<()> {
         if self.events[event_index].in_watch_delay() {
             debug!(
-                "Skip {}, it is still in next watch delay.",
+                "Skip `{}`, it is still in next watch delay.",
                 self.events[event_index].name
             );
             return Ok(());
@@ -170,22 +171,24 @@ impl Monitor {
         self.events[event_index].record_last_found();
 
         info!(
-            "Found EVENT: {name}, LOG_MESSAGE: {log_msg} => Try to execute {script}",
+            "Found EVENT: `{name}`, LOG_MESSAGE: `{log_msg}` => Try to execute `{script}`",
             name = self.events[event_index].name,
             script = self.events[event_index].script.display()
         );
 
-        // Put script in queue.
         let mut script: Script = Script::new(
-            self.events[event_index].script.clone(),
+            &self.events[event_index].script,
             self.events[event_index].script_timeout,
-        );
+        )
+        .context("Failed to prepare script")?;
 
+        // Add JNB_MESSAGE env var
         let msg_env = EnvVar::Message(log_msg.to_owned());
         script
             .add_env(msg_env.clone())
             .with_context(|| format!("Could not add env `{msg_env}`"))?;
 
+        // Add JNB_JSON env var
         let json_env = EnvVar::Json(
             serde_json::to_string(&entry)
                 .with_context(|| format!("Failed to serialize `{entry:?}` to string of JSON"))?,
@@ -194,6 +197,7 @@ impl Monitor {
             .add_env(json_env.clone())
             .with_context(|| format!("Could not add env `{json_env}`"))?;
 
+        // Put script in launcher's queue
         if let Err(err) = self
             .launcher
             .add(script.clone())

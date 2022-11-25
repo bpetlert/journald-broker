@@ -1,7 +1,8 @@
 use std::{
     collections::HashMap,
-    fmt,
-    path::PathBuf,
+    fmt, fs,
+    os::unix::prelude::MetadataExt,
+    path::{Path, PathBuf},
     process::Command,
     sync::mpsc::{channel, RecvError, Sender},
     thread,
@@ -42,12 +43,39 @@ pub struct Script {
 }
 
 impl Script {
-    pub fn new(path: PathBuf, timeout: Option<u64>) -> Self {
-        Self {
-            path,
+    pub fn new(path: &Path, timeout: Option<u64>) -> Result<Self> {
+        Script::validate(path)?;
+
+        Ok(Self {
+            path: path.to_path_buf(),
             envs: HashMap::new(),
             timeout,
+        })
+    }
+
+    /// Verify if a script is owned by root and exectable.
+    fn validate(path: &Path) -> Result<()> {
+        let metadata = fs::metadata(path)
+            .with_context(|| format!("Could not get metadata of `{}`", path.display()))?;
+
+        if metadata.is_dir() {
+            bail!("`{}` is a directory.", path.display());
         }
+
+        if metadata.uid() != 0 {
+            bail!("`{}` is not owned by uid 0", path.display());
+        }
+
+        if metadata.gid() != 0 {
+            bail!("`{}` is not owned by gid 0", path.display());
+        }
+
+        // has at least 500 for file mode
+        if metadata.mode() & 0o500 != 0o500 {
+            bail!("`{}` is not executable.", path.display());
+        }
+
+        Ok(())
     }
 
     pub fn add_env(&mut self, env_var: EnvVar) -> Result<()> {

@@ -24,10 +24,11 @@ bump-version VERSION:
 
 @_bump-pkgbuild VERSION:
   sed -i -e "s/pkgver=.*/pkgver={{VERSION}}/g" -e "s/pkgrel=.*/pkgrel=1/g"  PKGBUILD.local
+  sed -i -e "s/pkgver=.*/pkgver={{VERSION}}/g" -e "s/pkgrel=.*/pkgrel=1/g"  PKGBUILD.aur
 
 # Commit bump version and release
 release VERSION:
-  git add Cargo.lock Cargo.toml PKGBUILD.local
+  git add Cargo.lock Cargo.toml PKGBUILD.aur PKGBUILD.local
   git commit --message="chore(release): {{VERSION}}"
   git tag --sign --annotate {{VERSION}} --message="version {{VERSION}}" --edit
 

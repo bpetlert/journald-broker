@@ -4,7 +4,7 @@ version = "0.1.0"
 
 authors = ["Bhanupong Petchlert <bpetlert@gmail.com>"]
 
-description = "A log-based event broker daemon for journald"
+description = "A log-based event dispatcher daemon for systemd's journal"
 documentation = "https://github.com/bpetlert/journald-broker"
 homepage = "https://github.com/bpetlert/journald-broker"
 license = "GPL-3.0-or-later"

@@ -31,6 +31,7 @@ $ systemctl enable --now journald-broker.service
 The configuration file is located in `/etc/systemd/journald-broker.toml`.
 User is allowed to define event as many times as needed.
 Each event must has a unique name.
+A script for each event must be a regular executable file owned by root.
 
 ./etc/systemd/journald-broker.toml
 [source,toml]

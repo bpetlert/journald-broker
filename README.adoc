@@ -129,6 +129,9 @@ The error will show in journal log as show below:
 
 In this example, `journald-broker` will monitor only the warning message (`PRIORITY=4`) of kernel log (`_TRANSPORT=kernel`).
 After the these error messages are found, it will automatically rebind the device.
+Since the log message will repeat really fast, the event will be fired repeatedly and attempt to rebind the device again.
+It would be undesirable result.
+To prevent this, it is necessary to slow down for firing the same event by using `next-watch-delay` setting.
 
 ./etc/systemd/journald-broker.toml
 [source,toml]

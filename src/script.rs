@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    fmt, fs,
+    fmt,
     os::unix::prelude::MetadataExt,
     path::{Path, PathBuf},
     process::Command,
@@ -55,7 +55,8 @@ impl Script {
 
     /// Verify if a script is owned by root and exectable.
     fn validate(path: &Path) -> Result<()> {
-        let metadata = fs::metadata(path)
+        let metadata = path
+            .metadata()
             .with_context(|| format!("Could not get metadata of `{}`", path.display()))?;
 
         if metadata.is_dir() {

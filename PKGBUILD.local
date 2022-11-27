@@ -2,7 +2,7 @@
 pkgname=journald-broker
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="A log-based event broker daemon for journald"
+pkgdesc="A log-based event dispatcher daemon for systemd's journal"
 arch=('x86_64')
 url="https://github.com/bpetlert/journald-broker"
 license=('GPL-3.0-or-later')

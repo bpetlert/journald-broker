@@ -1,6 +1,19 @@
 = journald-broker
 :toc:
 :toc-placement!:
+ifndef::env-github[:icons: font]
+ifdef::env-github[]
+:status:
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+image:https://img.shields.io/github/v/tag/bpetlert/journald-broker?include_prereleases&label=release&style=flat-square[Release,link=https://github.com/bpetlert/journald-broker/releases/latest]
+image:https://img.shields.io/aur/version/journald-broker?style=flat-square["AUR: journald-broker",link=https://aur.archlinux.org/packages/journald-broker/]
+image:https://img.shields.io/github/license/bpetlert/journald-broker?style=flat-square["License: GPL-3.0-or-later",link=./COPYING]
 
 *journald-broker* is a log-based event dispatcher daemon for systemd's journal.
 The events are defined by user.
@@ -13,7 +26,8 @@ toc::[]
 
 === Arch Linux
 
-To build and install arch package from GIT source:
+*journald-broker* can be installed from https://aur.archlinux.org/packages/journald-broker[AUR].
+To build and install arch package from GIT source, try:
 
 [source,console]
 $ git clone https://github.com/bpetlert/journald-broker.git
@@ -78,6 +92,9 @@ When an event is dispatched, the related information is passed to its script usi
 
 === Example 1: Extract a specific log to file
 
+This example shows how to extract log message that start start with "xhci_hcd 0000:04:00.0: WARN".
+Then write log entry to external file.
+
 ./etc/systemd/journald-broker.toml
 [source,toml]
 ----
@@ -97,6 +114,21 @@ exit 0
 ----
 
 === Example 2: Workaround error of xhci_hcd when connect to USB-3.0-to-Ethernet
+
+The "USB 3.0 to ethernet adapter" device on xhci_hcd bus will sometime stop functioning until reconnect or rebind.
+The error will show in journal log as show below:
+
+[source,console]
+----
+[ 1179.475926] kernel: xhci_hcd 0000:04:00.0: WARN: TRB error for slot 1 ep 5 on endpoint
+[ 1179.607026] kernel: xhci_hcd 0000:04:00.0: WARN waiting for error on ep to be cleared
+[ 1179.607049] kernel: xhci_hcd 0000:04:00.0: WARN waiting for error on ep to be cleared
+[ 1179.607054] kernel: xhci_hcd 0000:04:00.0: WARN waiting for error on ep to be cleared
+[ 1179.607058] kernel: xhci_hcd 0000:04:00.0: WARN waiting for error on ep to be cleared
+----
+
+In this example, `journald-broker` will monitor only the warning message (`PRIORITY=4`) of kernel log (`_TRANSPORT=kernel`).
+After the these error messages are found, it will automatically rebind the device.
 
 ./etc/systemd/journald-broker.toml
 [source,toml]

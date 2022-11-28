@@ -179,6 +179,7 @@ impl Monitor {
         let mut script: Script = Script::new(
             &self.events[event_index].script,
             self.events[event_index].script_timeout,
+            true,
         )
         .context("Failed to prepare script")?;
 

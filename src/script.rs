@@ -43,8 +43,10 @@ pub struct Script {
 }
 
 impl Script {
-    pub fn new(path: &Path, timeout: Option<u64>) -> Result<Self> {
-        Script::validate(path)?;
+    pub fn new(path: &Path, timeout: Option<u64>, validate: bool) -> Result<Self> {
+        if validate {
+            Script::validate_script(path)?;
+        }
 
         Ok(Self {
             path: path.to_path_buf(),
@@ -54,7 +56,7 @@ impl Script {
     }
 
     /// Verify if a script is owned by root and exectable.
-    fn validate(path: &Path) -> Result<()> {
+    fn validate_script(path: &Path) -> Result<()> {
         let metadata = path
             .metadata()
             .with_context(|| format!("Could not get metadata of `{}`", path.display()))?;
@@ -114,7 +116,7 @@ impl Script {
                     process.kill()?;
                     let exit_code = process.wait()?;
                     bail!(
-                        "Execute timeout `{}`, >= {timeout}, {exit_code}",
+                        "Execute timeout `{}`, >= {timeout} seconds, {exit_code}",
                         &self.path.display()
                     );
                 }
@@ -126,7 +128,7 @@ impl Script {
                     .wait()
                     .context("Failed to wait until child process to finish")
                 {
-                    Ok(exit_code) => info!("Finished {}, {exit_code}", &self.path.display()),
+                    Ok(exit_code) => info!("Finished `{}`, {exit_code}", &self.path.display()),
                     Err(err) => warn!("{err:#}"),
                 }
             });
@@ -139,6 +141,12 @@ impl Script {
 #[derive(Debug)]
 pub struct Launcher {
     tx: Sender<Box<Script>>,
+}
+
+impl Default for Launcher {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Launcher {
@@ -167,5 +175,43 @@ impl Launcher {
             .send(Box::new(script))
             .context("Failed to send a script to launcher channel")?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{fs, os::unix::prelude::OpenOptionsExt};
+
+    use tempfile::TempDir;
+
+    use super::*;
+
+    #[test]
+    fn test_validate_script() {
+        // Test executable-root-script
+        assert!(Script::validate_script(Path::new("/usr/bin/bash")).is_ok());
+
+        let temp_dir = TempDir::new().unwrap();
+        assert!(temp_dir.path().to_owned().exists());
+
+        // Test executable-non-root-script
+        let exec_non_root = temp_dir.path().join("executable-non-root-script");
+        fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .mode(0o500)
+            .open(&exec_non_root)
+            .unwrap();
+        assert!(Script::validate_script(Path::new(&exec_non_root)).is_err());
+
+        // Test non-executable-non-root-script
+        let non_exec_non_root = temp_dir.path().join("non-executable-non-root-script");
+        fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .mode(0o400)
+            .open(&non_exec_non_root)
+            .unwrap();
+        assert!(Script::validate_script(Path::new(&non_exec_non_root)).is_err());
     }
 }

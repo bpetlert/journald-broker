@@ -36,3 +36,6 @@ tracing-subscriber = { version = "0.3.16", default-features = false, features = 
     "fmt",
 ] }
 wait-timeout = "0.2.0"
+
+[dev-dependencies]
+tempfile = "3.3.0"

@@ -1,7 +1,3 @@
-mod monitor;
-mod script;
-mod settings;
-
 use std::{io, path::PathBuf};
 
 use anyhow::{anyhow, Context, Result};
@@ -10,7 +6,7 @@ use mimalloc::MiMalloc;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
 
-use crate::{monitor::Monitor, settings::Settings};
+use journald_broker::{monitor::Monitor, settings::Settings};
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;

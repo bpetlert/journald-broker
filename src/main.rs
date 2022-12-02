@@ -1,9 +1,9 @@
-use std::{io, path::PathBuf};
+use std::{io, path::PathBuf, process::ExitCode};
 
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use mimalloc::MiMalloc;
-use tracing::debug;
+use tracing::{debug, error};
 use tracing_subscriber::EnvFilter;
 
 use journald_broker::{monitor::Monitor, settings::Settings};
@@ -19,7 +19,7 @@ pub struct Arguments {
     pub config_file: PathBuf,
 }
 
-fn main() -> Result<()> {
+fn run() -> Result<()> {
     let filter =
         EnvFilter::try_from_default_env().unwrap_or(EnvFilter::try_new("journald_broker=info")?);
     tracing_subscriber::fmt()
@@ -40,6 +40,14 @@ fn main() -> Result<()> {
     Monitor::new(settings)
         .context("Could not create journal watcher")?
         .watch()
+}
+
+fn main() -> ExitCode {
+    if let Err(err) = run() {
+        error!("{err:#}");
+        return ExitCode::FAILURE;
+    }
+    ExitCode::SUCCESS
 }
 
 #[cfg(test)]

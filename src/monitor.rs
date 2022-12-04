@@ -4,7 +4,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
+use regex::RegexSet;
 use systemd::{daemon, journal, Journal};
 use tracing::{debug, error, info, warn};
 
@@ -211,10 +212,10 @@ impl Monitor {
     }
 
     fn matches(&self, log_msg: &str) -> Result<Vec<usize>> {
-        let event_regex_set = {
+        let event_regex_set: &RegexSet = {
             static RE: once_cell::sync::OnceCell<regex::RegexSet> =
                 once_cell::sync::OnceCell::new();
-            RE.get_or_init(|| {
+            RE.get_or_try_init(|| {
                 regex::RegexSet::new(
                     &self
                         .events
@@ -222,8 +223,9 @@ impl Monitor {
                         .map(|event| event.msg_filter.clone())
                         .collect::<Vec<String>>(),
                 )
-                .expect("Creating event message regex")
             })
+            .map_err(|err| anyhow!("{err:#?}"))
+            .context("Could not create event message regex")?
         };
 
         Ok(event_regex_set

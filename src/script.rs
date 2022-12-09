@@ -143,30 +143,27 @@ pub struct Launcher {
     tx: Sender<Box<Script>>,
 }
 
-impl Default for Launcher {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Launcher {
-    pub fn new() -> Launcher {
+    pub fn new() -> Result<Self> {
         let (tx, rx) = channel::<Box<Script>>();
 
-        thread::spawn(move || loop {
-            match rx.recv() {
-                Ok(script) => {
-                    if let Err(err) = script.run() {
-                        warn!("{err:#}");
+        thread::Builder::new()
+            .name("script launcher".to_string())
+            .spawn(move || loop {
+                match rx.recv() {
+                    Ok(script) => {
+                        if let Err(err) = script.run() {
+                            warn!("{err:#}");
+                        }
                     }
-                }
-                Err(RecvError {}) => {
-                    error!("Failed to receive script");
-                }
-            };
-        });
+                    Err(RecvError {}) => {
+                        error!("Failed to receive script");
+                    }
+                };
+            })
+            .context("Could not create script launcher thread")?;
 
-        Launcher { tx }
+        Ok(Launcher { tx })
     }
 
     /// Add a script to execute queue

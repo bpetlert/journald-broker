@@ -61,7 +61,7 @@ impl Monitor {
         Ok(Self {
             filters: settings.global.and_then(|v| v.filters),
             events,
-            launcher: Launcher::new(),
+            launcher: Launcher::new()?,
         })
     }
 

@@ -172,6 +172,11 @@ echo -n "0000:04:00.0" > /sys/bus/pci/drivers/xhci_hcd/bind
 exit 0
 ----
 
+== Design
+
+[link=https://raw.githubusercontent.com/bpetlert/journald-broker/main/docs/assets/journald-broker.svg?sanitize=true&raw=true]
+image::https://raw.githubusercontent.com/bpetlert/journald-broker/main/docs/assets/journald-broker.svg?sanitize=true&raw=true[Sequence Diagram]
+
 == License
 
 *link:./COPYING[GNU General Public License v3.0 or later]*

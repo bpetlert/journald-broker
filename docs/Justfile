@@ -1,0 +1,9 @@
+@_default:
+  just --list
+
+build: assets
+
+# Generate assets
+assets:
+  mkdir -p assets
+  plantuml -tsvg -nometadata -o assets/ journald-broker-seq.plantuml 2>/dev/null

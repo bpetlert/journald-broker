@@ -1,0 +1,47 @@
+@startuml journald-broker
+
+skinparam defaultFontName "Helvetica"
+skinparam defaultFontSize 13
+skinparam defaultFontColor black
+skinparam BackgroundColor Azure
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam shadowing false
+
+participant "**Journald**" as Journald
+
+box "journald-broker" #DeepSkyBlue
+participant Monitor
+participant Event
+participant Script
+participant Launcher
+end box
+
+participant "**System**" as System
+
+autonumber
+
+== Initialization ==
+Monitor -> Event ++ : load user-defined events
+Launcher ->> Launcher ++ : wait for new script
+Monitor ->> Monitor ++ : watch for new log entry
+
+== New Log Entry Arrival ==
+Journald ->> Monitor ++ : new log entry
+Monitor -> Event ++ : match log entry with events
+return matched events
+
+loop respond to each matched event
+    alt event is not in watch delay
+        Monitor -> Script ** : create a script related to matched event
+        Monitor -> Launcher ++ : send script to queue
+        return ok
+    end
+end
+deactivate Monitor
+
+== Execute Script Queue ==
+Launcher ->> System ++ : execute script
+return done
+
+@enduml

@@ -10,7 +10,8 @@ use systemd::{daemon, journal, Journal};
 use tracing::{debug, error, info, warn};
 
 use crate::{
-    script::{EnvVar, Launcher, Script},
+    launcher::Launcher,
+    script::{EnvVar, Script},
     settings::Settings,
 };
 

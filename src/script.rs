@@ -4,13 +4,12 @@ use std::{
     os::unix::prelude::MetadataExt,
     path::{Path, PathBuf},
     process::Command,
-    sync::mpsc::{channel, RecvError, Sender},
     thread,
     time::Duration,
 };
 
 use anyhow::{bail, Context, Result};
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 use wait_timeout::ChildExt;
 
 #[derive(Debug, Clone)]
@@ -134,43 +133,6 @@ impl Script {
             });
         }
 
-        Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub struct Launcher {
-    tx: Sender<Box<Script>>,
-}
-
-impl Launcher {
-    pub fn new() -> Result<Self> {
-        let (tx, rx) = channel::<Box<Script>>();
-
-        thread::Builder::new()
-            .name("script launcher".to_string())
-            .spawn(move || loop {
-                match rx.recv() {
-                    Ok(script) => {
-                        if let Err(err) = script.run() {
-                            warn!("{err:#}");
-                        }
-                    }
-                    Err(RecvError {}) => {
-                        error!("Failed to receive script");
-                    }
-                };
-            })
-            .context("Could not create script launcher thread")?;
-
-        Ok(Launcher { tx })
-    }
-
-    /// Add a script to execute queue
-    pub fn add(&self, script: Script) -> Result<()> {
-        self.tx
-            .send(Box::new(script))
-            .context("Failed to send a script to launcher channel")?;
         Ok(())
     }
 }

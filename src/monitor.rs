@@ -218,8 +218,7 @@ impl Monitor {
                 once_cell::sync::OnceCell::new();
             RE.get_or_try_init(|| {
                 regex::RegexSet::new(
-                    &self
-                        .events
+                    self.events
                         .iter()
                         .map(|event| event.msg_filter.clone())
                         .collect::<Vec<String>>(),

@@ -121,25 +121,25 @@ impl Monitor {
             bail!("Cannot move to the most recent journal entry");
         }
 
-        loop {
+        'watch_new_entry: loop {
             // Wait for new journal entry
             let entry = match journal
                 .next_entry()
                 .context("Failed to read the next entry from the journal")?
             {
                 Some(new_entry) => new_entry,
-                None => loop {
+                None => 'until_new_entry: loop {
                     if let Some(new_entry) = journal
                         .await_next_entry(None)
                         .context("Failed to read the next entry from the journal")?
                     {
-                        break new_entry;
+                        break 'until_new_entry new_entry;
                     }
                 },
             };
 
             let Some(log_msg) = entry.get("MESSAGE") else {
-                continue;
+                continue 'watch_new_entry;
             };
             debug!("MESSAGE: {log_msg}");
 

@@ -14,7 +14,7 @@ conflicts=("${pkgname}")
 backup=(etc/systemd/journald-broker.toml)
 
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/bpetlert/${pkgname}/archive/${pkgver}.tar.gz")
-sha256sums=('78108f5706189e7a9e20599705f7a1756f970e6e1c2839bc780786726c562cd7')
+b2sums=('51053edf99dff5070f1b92fa4deed0238f56e9ceedb96a4db620b6c705fe30722cc65690a71682310a02a5fe69ac9ffba5abb6db061c22a1d97622455b9f3741')
 
 prepare() {
   cd "${pkgname}-${pkgver}"

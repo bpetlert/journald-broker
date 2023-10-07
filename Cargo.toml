@@ -16,12 +16,12 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.75"
-clap = { version = "4.4.3", features = ["derive"] }
+clap = { version = "4.4.6", features = ["derive"] }
 config = { version = "0.13.3", default-features = false, features = ["toml"] }
 humantime-serde = "1.1.1"
 mimalloc = "0.1.39"
 once_cell = "1.18.0"
-regex = "1.9.5"
+regex = "1.9.6"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
 systemd = { version = "0.10.0", default-features = false, features = [

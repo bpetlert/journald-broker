@@ -225,7 +225,7 @@ impl Monitor {
                 )
             })
             .map_err(|err| anyhow!("{err:#?}"))
-            .context("Could not create event message regex")?
+            .expect("Valid regular expressions for matching log message")
         };
 
         Ok(event_regex_set

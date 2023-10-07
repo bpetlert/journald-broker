@@ -1,10 +1,11 @@
 use std::{
     collections::BTreeMap,
     path::PathBuf,
+    sync::OnceLock,
     time::{Duration, Instant},
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use regex::RegexSet;
 use systemd::{daemon, journal, Journal};
 use tracing::{debug, error, info, warn};
@@ -214,18 +215,16 @@ impl Monitor {
 
     fn matches(&self, log_msg: &str) -> Result<Vec<usize>> {
         let event_regex_set: &RegexSet = {
-            static RE: once_cell::sync::OnceCell<regex::RegexSet> =
-                once_cell::sync::OnceCell::new();
-            RE.get_or_try_init(|| {
-                regex::RegexSet::new(
+            static RE: OnceLock<RegexSet> = OnceLock::new();
+            RE.get_or_init(|| {
+                RegexSet::new(
                     self.events
                         .iter()
                         .map(|event| event.msg_filter.clone())
                         .collect::<Vec<String>>(),
                 )
+                .expect("Valid regular expressions for matching log message")
             })
-            .map_err(|err| anyhow!("{err:#?}"))
-            .expect("Valid regular expressions for matching log message")
         };
 
         Ok(event_regex_set

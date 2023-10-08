@@ -30,6 +30,25 @@ fn run() -> Result<()> {
         .map_err(|err| anyhow!("{err:#}"))
         .context("Failed to initialize tracing subscriber")?;
 
+    // Panic to log
+    std::panic::set_hook(Box::new(|panic_info| {
+        let (filename, line) = panic_info
+            .location()
+            .map(|loc| (loc.file(), loc.line()))
+            .unwrap_or(("<unknown>", 0));
+
+        let cause = match (
+            panic_info.payload().downcast_ref::<&str>(),
+            panic_info.payload().downcast_ref::<String>(),
+        ) {
+            (Some(s), _) => *s,
+            (_, Some(s)) => s,
+            (None, None) => "<unknown cause>",
+        };
+
+        error!("A panic occurred at {filename}:{line}: {cause}");
+    }));
+
     let arguments = Arguments::parse();
     debug!("Run with {:?}", arguments);
 

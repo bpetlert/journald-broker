@@ -16,17 +16,17 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.75"
-clap = { version = "4.4.6", features = ["derive"] }
+clap = { version = "4.4.7", features = ["derive"] }
 config = { version = "0.13.3", default-features = false, features = ["toml"] }
 humantime-serde = "1.1.1"
 mimalloc = "0.1.39"
-regex = "1.9.6"
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.107"
+regex = "1.10.2"
+serde = { version = "1.0.190", features = ["derive"] }
+serde_json = "1.0.108"
 systemd = { version = "0.10.0", default-features = false, features = [
     "journal",
 ] }
-tracing = { version = "0.1.37", features = [
+tracing = { version = "0.1.40", features = [
     "max_level_debug",
     "release_max_level_debug",
 ] }
@@ -37,4 +37,4 @@ tracing-subscriber = { version = "0.3.17", default-features = false, features = 
 wait-timeout = "0.2.0"
 
 [dev-dependencies]
-tempfile = "3.8.0"
+tempfile = "3.8.1"

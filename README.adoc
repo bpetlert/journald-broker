@@ -42,41 +42,12 @@ $ systemctl enable --now journald-broker.service
 
 == Usage
 
-The configuration file is located in `/etc/systemd/journald-broker.toml`.
+The configuration files, `*.conf` are stored in `/etc/journald-broker.d/`.
+The configuration files are loaded in alphabetical order.
+The later occurrences of config will override previous ones.
 User is allowed to define event as many times as needed.
 Each event must has a unique name.
 A script for each event must be a regular executable file owned by root.
-
-./etc/systemd/journald-broker.toml
-[source,toml]
-----
-# [global]
-## Filter log message using journal fields. This setting is optional. Default value is no filter.
-## See https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html#User%20Journal%20Fields for more details.
-# filters = ["_TRANSPORT=kernel", "PRIORITY=4"]
-
-## Run a script with a timeout specified (in seconds). Default is 20 seconds.
-# script_timeout = "20"
-
-## [events.<EVENT_NAME>]
-# [events.event-1]
-## Filter log message using regular expression. The value is surrounded by single quotes.
-# message = 'some regex'
-#
-## Delay before next checking log message. Default is zero.
-## e.g.
-##     1 hour 1 minute 1 second
-##     5s
-##     5 minute
-##     5m
-# next-watch-delay = ""
-#
-## Script to run when message is found.
-# script = "/path/to/script"
-#
-## Wait for current script to finish before run next script. Default is true.
-# script-wait = true
-----
 
 When an event is dispatched, the related information is passed to its script using environment variables below:
 
@@ -95,7 +66,7 @@ When an event is dispatched, the related information is passed to its script usi
 This example shows how to extract log message that start start with "xhci_hcd 0000:04:00.0: WARN".
 Then write log entry to external file.
 
-./etc/systemd/journald-broker.toml
+./etc/journald-broker.d/01-extract-xhci_hcd-error.conf
 [source,toml]
 ----
 [events.extract-xhci_hcd-error]
@@ -133,7 +104,7 @@ Since the log message will repeat really fast, the event will be fired repeatedl
 It would be undesirable result.
 To prevent this, it is necessary to slow down for firing the same event by using `next-watch-delay` setting.
 
-./etc/systemd/journald-broker.toml
+./etc/journald-broker.d/02-xhci_hcd-error.conf
 [source,toml]
 ----
 [global]

@@ -48,8 +48,13 @@ pub struct Monitor {
 
 impl Monitor {
     pub fn new(settings: Settings) -> Result<Self> {
+        if settings.events.is_none() {
+            bail!("Event list is empty. Please check configuration files.")
+        }
+
         let events = settings
             .events
+            .unwrap()
             .into_iter()
             .map(|(name, event)| Event {
                 name,

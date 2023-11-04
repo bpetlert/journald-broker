@@ -3,7 +3,7 @@
 
 # Run with local configuration file
 run-debug-default:
-  RUST_BACKTRACE=1 RUST_LOG=journald_broker=debug cargo run -- --config-file ./journald-broker.toml
+  RUST_BACKTRACE=1 RUST_LOG=journald_broker=debug cargo run -- --config-file ./00-global-settings.conf
 
 # Run with debug log
 run-debug +ARGS='':

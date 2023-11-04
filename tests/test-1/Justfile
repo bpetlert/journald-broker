@@ -2,7 +2,7 @@
   just --list
 
 run:
-  RUST_BACKTRACE=1 RUST_LOG=journald_broker=debug cargo run -- --config-file ./echo-log.toml
+  RUST_BACKTRACE=1 RUST_LOG=journald_broker=debug cargo run -- --config-file ./echo-log.conf
 
 # Generate new log entry
 nudge-journal-entry:

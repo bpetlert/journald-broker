@@ -11,7 +11,10 @@ makedepends=(cargo)
 options=(!lto)
 provides=("${pkgname}")
 conflicts=("${pkgname}")
-backup=(etc/systemd/journald-broker.toml)
+backup=(
+  "etc/journald-broker.d/00-global-settings.conf"
+  "etc/journald-broker.d/00-template.conf"
+)
 
 # Build from local directory
 source=()
@@ -41,12 +44,14 @@ build() {
 
 package() {
   cd "$srcdir"
-  install -Dm755 "target/release/journald-broker" "$pkgdir/usr/bin/journald-broker"
+  install -Dm755 "target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
 
-  install -Dm644 "${startdir}/journald-broker.service" "$pkgdir/usr/lib/systemd/system/journald-broker.service"
+  install -Dm644 "${startdir}/journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
 
-  install -Dm644 "${startdir}/journald-broker.toml" "$pkgdir/etc/systemd/journald-broker.toml"
+  install -dm755 "${pkgdir}/etc/journald-broker.d/"
+  install -Dm644 "${startdir}/00-global-settings.conf" "${pkgdir}/etc/journald-broker.d/00-global-settings.conf"
+  install -Dm644 "${startdir}/00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
 
-  install -Dm644 "${startdir}/README.adoc" "$pkgdir/usr/share/doc/${pkgname}/README.adoc"
-  install -Dm644 "${startdir}/COPYING" "$pkgdir/usr/share/licenses/${pkgname}/COPYING"
+  install -Dm644 "${startdir}/README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
+  install -Dm644 "${startdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
 }

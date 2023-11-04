@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf, process::ExitCode};
+use std::{io, process::ExitCode};
 
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
@@ -6,18 +6,11 @@ use mimalloc::MiMalloc;
 use tracing::{debug, error};
 use tracing_subscriber::EnvFilter;
 
-use journald_broker::{monitor::Monitor, settings::Settings};
+use journald_broker::{args::Arguments, monitor::Monitor, settings::Settings};
+use walkdir::WalkDir;
 
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-pub struct Arguments {
-    /// Configuration file
-    #[arg(short, long, default_value = "/etc/systemd/journald-broker.toml")]
-    pub config_file: PathBuf,
-}
 
 fn run() -> Result<()> {
     let filter =
@@ -52,8 +45,35 @@ fn run() -> Result<()> {
     let arguments = Arguments::parse();
     debug!("Run with {:?}", arguments);
 
-    let settings = Settings::new(arguments.config_file.to_str().unwrap())
-        .context("Failed to load settings")?;
+    let mut settings = Settings::new()?;
+
+    if let Some(config_file) = arguments.config_file {
+        // Load single configuration file
+        settings
+            .read(config_file.to_str().unwrap())
+            .context("Failed to load settings")?;
+    } else {
+        // Load multiple configuration files
+        for entry in WalkDir::new(arguments.config_dir)
+            .min_depth(1)
+            .max_depth(1)
+            .follow_links(false)
+            .sort_by(|a, b| a.file_name().cmp(b.file_name()))
+            .into_iter()
+            .filter_entry(|e| {
+                e.file_type().is_file()
+                    && e.file_name()
+                        .to_str()
+                        .map(|s| s.ends_with(".conf"))
+                        .unwrap_or(false)
+            })
+            .filter_map(|e| e.ok())
+        {
+            debug!("Load configuration file '{}'", entry.path().display());
+            settings.read(entry.path().to_str().unwrap())?;
+        }
+    }
+
     debug!("{settings:#?}");
 
     Monitor::new(settings)
@@ -67,47 +87,4 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use clap::{CommandFactory, FromArgMatches};
-
-    #[test]
-    fn test_args() {
-        // Default arguments
-        let args = Arguments::from_arg_matches(
-            &Arguments::command().get_matches_from(vec![env!("CARGO_CRATE_NAME")]),
-        )
-        .expect("Paring argument");
-        assert_eq!(
-            args.config_file,
-            PathBuf::from("/etc/systemd/journald-broker.toml")
-        );
-
-        // Full long arguments
-        let args = Arguments::from_arg_matches(&Arguments::command().get_matches_from(vec![
-            env!("CARGO_CRATE_NAME"),
-            "--config-file",
-            "/etc/systemd/journald-broker2.toml",
-        ]))
-        .expect("Paring argument");
-        assert_eq!(
-            args.config_file,
-            PathBuf::from("/etc/systemd/journald-broker2.toml")
-        );
-
-        // Full short arguments
-        let args = Arguments::from_arg_matches(&Arguments::command().get_matches_from(vec![
-            env!("CARGO_CRATE_NAME"),
-            "-c",
-            "/etc/systemd/journald-broker3.toml",
-        ]))
-        .expect("Paring argument");
-        assert_eq!(
-            args.config_file,
-            PathBuf::from("/etc/systemd/journald-broker3.toml")
-        );
-    }
 }

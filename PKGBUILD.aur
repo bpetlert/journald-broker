@@ -9,8 +9,6 @@ license=('GPL-3.0-or-later')
 depends=('systemd-libs')
 makedepends=(cargo)
 options=(!lto)
-provides=("${pkgname}")
-conflicts=("${pkgname}")
 backup=(
   "etc/journald-broker.d/00-global-settings.conf"
   "etc/journald-broker.d/00-template.conf"

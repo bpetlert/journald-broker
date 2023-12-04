@@ -51,5 +51,4 @@ package() {
   install -Dm644 "${startdir}/00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
 
   install -Dm644 "${startdir}/README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
-  install -Dm644 "${startdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
 }

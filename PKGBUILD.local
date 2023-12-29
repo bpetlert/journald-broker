@@ -41,8 +41,7 @@ build() {
 }
 
 package() {
-  cd "${startdir}"
-  install -Dm755 "target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
+  install -Dm755 "${srcdir}/target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
 
   install -Dm644 "${startdir}/journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
 

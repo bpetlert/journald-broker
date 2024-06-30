@@ -34,7 +34,6 @@ release VERSION:
 
 # Update and audit dependencies
 update-deps:
-    cargo upgrade
     cargo update
     cargo audit
 

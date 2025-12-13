@@ -10,35 +10,35 @@ depends=('systemd-libs')
 makedepends=(cargo)
 options=(!lto)
 backup=(
-  "etc/journald-broker.d/00-global-settings.conf"
-  "etc/journald-broker.d/00-template.conf"
+    "etc/journald-broker.d/00-global-settings.conf"
+    "etc/journald-broker.d/00-template.conf"
 )
 
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/bpetlert/${pkgname}/archive/${pkgver}.tar.gz")
 b2sums=('51053edf99dff5070f1b92fa4deed0238f56e9ceedb96a4db620b6c705fe30722cc65690a71682310a02a5fe69ac9ffba5abb6db061c22a1d97622455b9f3741')
 
 prepare() {
-  cd "${pkgname}-${pkgver}"
-  export RUSTUP_TOOLCHAIN=stable
-  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+    cd "${pkgname}-${pkgver}"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target $(rustc --print host-tuple)
 }
 
 build() {
-  cd "${pkgname}-${pkgver}"
-  export RUSTUP_TOOLCHAIN=stable
-  export CARGO_TARGET_DIR=target
-  cargo build --frozen --release
+    cd "${pkgname}-${pkgver}"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release
 }
 
 package() {
-  cd "${pkgname}-${pkgver}"
-  install -Dm755 "target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
+    cd "${pkgname}-${pkgver}"
+    install -Dm755 "target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
 
-  install -Dm644 "journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
+    install -Dm644 "journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
 
-  install -dm755 "${pkgdir}/etc/journald-broker.d/"
-  install -Dm644 "00-global-settings.conf" "${pkgdir}/etc/journald-broker.d/00-global-settings.conf"
-  install -Dm644 "00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
+    install -dm755 "${pkgdir}/etc/journald-broker.d/"
+    install -Dm644 "00-global-settings.conf" "${pkgdir}/etc/journald-broker.d/00-global-settings.conf"
+    install -Dm644 "00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
 
-  install -Dm644 "README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
+    install -Dm644 "README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
 }

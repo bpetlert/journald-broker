@@ -10,8 +10,8 @@ depends=('systemd-libs')
 makedepends=(cargo)
 options=(!lto)
 backup=(
-  "etc/journald-broker.d/00-global-settings.conf"
-  "etc/journald-broker.d/00-template.conf"
+    "etc/journald-broker.d/00-global-settings.conf"
+    "etc/journald-broker.d/00-template.conf"
 )
 
 # Build from local directory
@@ -19,35 +19,35 @@ source=()
 
 # Using the most recent annotated tag reachable from the last commit.
 pkgver() {
-  cd "${startdir}"
-  git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+    cd "${startdir}"
+    git describe --long | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 prepare() {
-  cd "${startdir}"
-  export RUSTUP_TOOLCHAIN=stable
-  cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+    cd "${startdir}"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target $(rustc --print host-tuple)
 }
 
 build() {
-  cd "${startdir}"
-  export RUSTUP_TOOLCHAIN=stable
+    cd "${startdir}"
+    export RUSTUP_TOOLCHAIN=stable
 
-  # Ignore target-dir in ~/.cargo/config, reset it to default: "target".
-  # Add "${srcdir}" to support BUILDDIR variable in makepkg.
-  export CARGO_TARGET_DIR=${srcdir}/target
+    # Ignore target-dir in ~/.cargo/config, reset it to default: "target".
+    # Add "${srcdir}" to support BUILDDIR variable in makepkg.
+    export CARGO_TARGET_DIR=${srcdir}/target
 
-  cargo build --frozen --release
+    cargo build --frozen --release
 }
 
 package() {
-  install -Dm755 "${srcdir}/target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
+    install -Dm755 "${srcdir}/target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
 
-  install -Dm644 "${startdir}/journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
+    install -Dm644 "${startdir}/journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
 
-  install -dm755 "${pkgdir}/etc/journald-broker.d/"
-  install -Dm644 "${startdir}/00-global-settings.conf" "${pkgdir}/etc/journald-broker.d/00-global-settings.conf"
-  install -Dm644 "${startdir}/00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
+    install -dm755 "${pkgdir}/etc/journald-broker.d/"
+    install -Dm644 "${startdir}/00-global-settings.conf" "${pkgdir}/etc/journald-broker.d/00-global-settings.conf"
+    install -Dm644 "${startdir}/00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
 
-  install -Dm644 "${startdir}/README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
+    install -Dm644 "${startdir}/README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
 }

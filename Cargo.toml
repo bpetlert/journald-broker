@@ -1,41 +1,37 @@
 [package]
 name = "journald-broker"
 version = "0.7.0"
-
-authors = ["Bhanupong Petchlert <bpetlert@gmail.com>"]
-
+edition = "2024"
 description = "A log-based event dispatcher daemon for systemd's journal"
 documentation = "https://github.com/bpetlert/journald-broker"
-homepage = "https://github.com/bpetlert/journald-broker"
-license = "GPL-3.0-or-later"
 readme = "README.adoc"
+homepage = "https://github.com/bpetlert/journald-broker"
 repository = "https://github.com/bpetlert/journald-broker"
-
-edition = "2021"
+license = "GPL-3.0-or-later"
 publish = false
 
 [dependencies]
 anyhow = "~1"
-clap = { version = "~4.5", features = ["derive"] }
-config = { version = "~0.14", default-features = false, features = ["toml"] }
-humantime-serde = "~1.1"
+clap = { version = "~4.6", features = ["derive"] }
+config = { version = "~0.15", default-features = false, features = ["toml"] }
+humantime-serde = "~1"
 mimalloc = { version = "~0.1", features = ["secure"] }
-regex = "~1.10"
-serde = { version = "~1.0", features = ["derive"] }
-serde_json = "~1.0"
+regex = "~1"
+serde = { version = "~1", features = ["derive"] }
+serde_json = "~1"
 systemd = { version = "~0.10", default-features = false, features = [
-    "journal",
+  "journal",
 ] }
 tracing = { version = "~0.1", features = [
-    "max_level_debug",
-    "release_max_level_debug",
+  "max_level_debug",
+  "release_max_level_debug",
 ] }
 tracing-subscriber = { version = "~0.3", default-features = false, features = [
-    "env-filter",
-    "fmt",
+  "env-filter",
+  "fmt",
 ] }
 wait-timeout = "~0.2"
 walkdir = "~2.5"
 
 [dev-dependencies]
-tempfile = "~3.10"
+tempfile = "~3"

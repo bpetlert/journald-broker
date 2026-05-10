@@ -26,7 +26,7 @@ pkgver() {
 prepare() {
     cd "${startdir}"
     export RUSTUP_TOOLCHAIN=stable
-    cargo fetch --locked --target $(rustc --print host-tuple)
+    cargo fetch --locked --target host-tuple
 }
 
 build() {
@@ -41,13 +41,10 @@ build() {
 }
 
 package() {
-    install -Dm755 "${srcdir}/target/release/journald-broker" "${pkgdir}/usr/bin/journald-broker"
-
-    install -Dm644 "${startdir}/journald-broker.service" "${pkgdir}/usr/lib/systemd/system/journald-broker.service"
-
-    install -dm755 "${pkgdir}/etc/journald-broker.d/"
-    install -Dm644 "${startdir}/00-global-settings.conf" "${pkgdir}/etc/journald-broker.d/00-global-settings.conf"
-    install -Dm644 "${startdir}/00-template.conf" "${pkgdir}/etc/journald-broker.d/00-template.conf"
-
-    install -Dm644 "${startdir}/README.adoc" "${pkgdir}/usr/share/doc/${pkgname}/README.adoc"
+    install -vDm755 -t "${pkgdir}/usr/bin" "${srcdir}/target/release/journald-broker"
+    install -vDm644 -t "${pkgdir}/usr/lib/systemd/system" "${startdir}/journald-broker.service"
+    install -vDm644 -t "${pkgdir}/usr/share/doc/${pkgname}" "${startdir}/README.adoc"
+    install -vdm755 "${pkgdir}/etc/journald-broker.d/"
+    install -vDm644 -t "${pkgdir}/etc/journald-broker.d" "${startdir}/00-global-settings.conf"
+    install -vDm644 -t "${pkgdir}/etc/journald-broker.d" "${startdir}/00-template.conf"
 }

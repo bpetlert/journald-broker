@@ -16,8 +16,12 @@ pub struct Arguments {
 
 #[cfg(test)]
 mod tests {
+    use clap::{
+        CommandFactory,
+        FromArgMatches,
+    };
+
     use super::*;
-    use clap::{CommandFactory, FromArgMatches};
 
     #[test]
     fn test_args() {

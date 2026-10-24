@@ -1,7 +1,17 @@
 use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
-use config::{builder::DefaultState, Config, ConfigBuilder, FileFormat, Map};
+use anyhow::{
+    Context,
+    Result,
+    anyhow,
+};
+use config::{
+    Config,
+    ConfigBuilder,
+    FileFormat,
+    Map,
+    builder::DefaultState,
+};
 use serde::Deserialize;
 
 const fn default_true() -> Option<bool> {
@@ -110,9 +120,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-1"].script,
             "script-1"
         );
-        assert!(settings.events.as_ref().unwrap()["event-1"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["event-1"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-2
         let mut settings = Settings::new().unwrap();
@@ -137,9 +149,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-2"].script,
             "script-2"
         );
-        assert!(settings.events.as_ref().unwrap()["event-2"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["event-2"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-3
         let mut settings = Settings::new().unwrap();
@@ -162,9 +176,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-3"].script,
             "script-3"
         );
-        assert!(settings.events.as_ref().unwrap()["event-3"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["event-3"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-4
         let mut settings = Settings::new().unwrap();
@@ -189,9 +205,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-4"].script,
             "script-4"
         );
-        assert!(!settings.events.as_ref().unwrap()["event-4"]
-            .script_wait
-            .unwrap());
+        assert!(
+            !settings.events.as_ref().unwrap()["event-4"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-5
         let mut settings = Settings::new().unwrap();
@@ -220,9 +238,11 @@ mod tests {
             settings.events.as_ref().unwrap()["xhci_hcd-error"].script,
             "/usr/local/bin/xhci_hcd-rebind.sh"
         );
-        assert!(settings.events.as_ref().unwrap()["xhci_hcd-error"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["xhci_hcd-error"]
+                .script_wait
+                .unwrap()
+        );
     }
 
     #[test]
@@ -270,9 +290,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-1"].script,
             "script-1"
         );
-        assert!(settings.events.as_ref().unwrap()["event-1"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["event-1"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-2
         settings
@@ -297,9 +319,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-2"].script,
             "script-2"
         );
-        assert!(settings.events.as_ref().unwrap()["event-2"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["event-2"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-3
         settings
@@ -322,9 +346,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-3"].script,
             "script-3"
         );
-        assert!(settings.events.as_ref().unwrap()["event-3"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["event-3"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-4
         settings
@@ -349,9 +375,11 @@ mod tests {
             settings.events.as_ref().unwrap()["event-4"].script,
             "script-4"
         );
-        assert!(!settings.events.as_ref().unwrap()["event-4"]
-            .script_wait
-            .unwrap());
+        assert!(
+            !settings.events.as_ref().unwrap()["event-4"]
+                .script_wait
+                .unwrap()
+        );
 
         // settings-5
         settings
@@ -380,8 +408,10 @@ mod tests {
             settings.events.as_ref().unwrap()["xhci_hcd-error"].script,
             "/usr/local/bin/xhci_hcd-rebind.sh"
         );
-        assert!(settings.events.as_ref().unwrap()["xhci_hcd-error"]
-            .script_wait
-            .unwrap());
+        assert!(
+            settings.events.as_ref().unwrap()["xhci_hcd-error"]
+                .script_wait
+                .unwrap()
+        );
     }
 }

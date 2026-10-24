@@ -2,14 +2,24 @@ use std::{
     collections::HashMap,
     fmt,
     os::unix::prelude::MetadataExt,
-    path::{Path, PathBuf},
+    path::{
+        Path,
+        PathBuf,
+    },
     process::Command,
     thread,
     time::Duration,
 };
 
-use anyhow::{bail, Context, Result};
-use tracing::{info, warn};
+use anyhow::{
+    Context,
+    Result,
+    bail,
+};
+use tracing::{
+    info,
+    warn,
+};
 use wait_timeout::ChildExt;
 
 #[derive(Debug, Clone)]
@@ -139,7 +149,10 @@ impl Script {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, os::unix::prelude::OpenOptionsExt};
+    use std::{
+        fs,
+        os::unix::prelude::OpenOptionsExt,
+    };
 
     use tempfile::TempDir;
 

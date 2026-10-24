@@ -1,13 +1,22 @@
 mod common;
 
 use std::{
-    io::{BufReader, Seek},
+    io::{
+        BufReader,
+        Seek,
+    },
     path::Path,
 };
 
-use journald_broker::script::{EnvVar, Script};
+use journald_broker::script::{
+    EnvVar,
+    Script,
+};
 
-use crate::common::log_check::{next_log, setup_log};
+use crate::common::log_check::{
+    next_log,
+    setup_log,
+};
 
 // Missing JNB_JSON environment variable
 #[test]

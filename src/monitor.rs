@@ -2,17 +2,36 @@ use std::{
     collections::BTreeMap,
     path::PathBuf,
     sync::OnceLock,
-    time::{Duration, Instant},
+    time::{
+        Duration,
+        Instant,
+    },
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{
+    Context,
+    Result,
+    bail,
+};
 use regex::RegexSet;
-use systemd::{daemon, journal, Journal};
-use tracing::{debug, error, info, warn};
+use systemd::{
+    Journal,
+    daemon,
+    journal,
+};
+use tracing::{
+    debug,
+    error,
+    info,
+    warn,
+};
 
 use crate::{
     launcher::Launcher,
-    script::{EnvVar, Script},
+    script::{
+        EnvVar,
+        Script,
+    },
     settings::Settings,
 };
 

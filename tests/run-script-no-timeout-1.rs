@@ -1,13 +1,20 @@
 mod common;
 
 use std::{
-    io::{BufReader, Seek},
+    io::{
+        BufReader,
+        Seek,
+    },
     path::Path,
 };
 
 use journald_broker::script::Script;
 
-use crate::common::log_check::{next_log, setup_log, wait_for_thread};
+use crate::common::log_check::{
+    next_log,
+    setup_log,
+    wait_for_thread,
+};
 
 // Missing JNB_MESSAGE environment variable
 #[test]

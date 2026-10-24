@@ -1,12 +1,25 @@
-use std::{io, process::ExitCode};
+use std::{
+    io,
+    process::ExitCode,
+};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{
+    Context,
+    Result,
+    anyhow,
+};
 use clap::Parser;
+use journald_broker::{
+    args::Arguments,
+    monitor::Monitor,
+    settings::Settings,
+};
 use mimalloc::MiMalloc;
-use tracing::{debug, error};
+use tracing::{
+    debug,
+    error,
+};
 use tracing_subscriber::EnvFilter;
-
-use journald_broker::{args::Arguments, monitor::Monitor, settings::Settings};
 use walkdir::WalkDir;
 
 #[global_allocator]

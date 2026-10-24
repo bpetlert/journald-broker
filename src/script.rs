@@ -106,7 +106,7 @@ impl Script {
         let mut process = match Command::new(&self.path)
             .envs(self.envs)
             .spawn()
-            .with_context(|| format!("Failed to execute `{}`", &self.path.display()))
+            .with_context(|| format!("Failed to execute `{}`", self.path.display()))
         {
             Ok(process) => process,
             Err(err) => bail!("{err:#}"),
@@ -126,7 +126,7 @@ impl Script {
                     let exit_code = process.wait()?;
                     bail!(
                         "Execute timeout `{}`, >= {timeout} seconds, {exit_code}",
-                        &self.path.display()
+                        self.path.display()
                     );
                 }
             }

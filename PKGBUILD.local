@@ -43,7 +43,7 @@ build() {
 package() {
     install -vDm755 -t "${pkgdir}/usr/bin" "${srcdir}/target/release/journald-broker"
     install -vDm644 -t "${pkgdir}/usr/lib/systemd/system" "${startdir}/journald-broker.service"
-    install -vDm644 -t "${pkgdir}/usr/share/doc/${pkgname}" "${startdir}/README.adoc"
+    install -vDm644 -t "${pkgdir}/usr/share/doc/${pkgname}" "${startdir}/README.md"
     install -vdm755 "${pkgdir}/etc/journald-broker.d/"
     install -vDm644 -t "${pkgdir}/etc/journald-broker.d" "${startdir}/00-global-settings.conf"
     install -vDm644 -t "${pkgdir}/etc/journald-broker.d" "${startdir}/00-template.conf"

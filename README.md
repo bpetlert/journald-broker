@@ -40,10 +40,10 @@ A script for each event must be a regular executable file owned by root.
 
 When an event is dispatched, the related information is passed to its script using environment variables below:
 
-| Environment Variable | Description |
-| --- | --- |
-| `JNB_MESSAGE` | Error log message |
-| `JNB_JSON` | Full journal log entry, encoded in JSON format. |
+| Environment Variable | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `JNB_MESSAGE`        | Error log message                               |
+| `JNB_JSON`           | Full journal log entry, encoded in JSON format. |
 
 ### Example 1: Extract a specific log to file
 
